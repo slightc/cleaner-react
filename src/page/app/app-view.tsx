@@ -62,17 +62,51 @@ function random_matrix(no_rows: number, no_cols: number, no_obs: number) {
 
 /////////////////////////////////////////////////
 
+interface RobotRunnerRuntime {
+  robot: React.RefObject<RobotHandler>;
+  matrix: MapMatrix;
+  startPosition?: {x: number, y: number};
+}
+
+const useRobotRunner = ()=>{
+  const [runtime, setRuntime] = React.useState<RobotRunnerRuntime | null>(null);
+  
+  React.useEffect(() => {
+    if(runtime){
+      console.log(runtime);
+    }
+  },[runtime])
+
+  return [setRuntime]
+}
+
+/////////////////////////////////////////////////
+
 const AppView: React.FC<{}> = () => {
 
   const [matrix, setMatrix] = React.useState<MapMatrix>(null)
-  const [startPosition, setStartPosition] = React.useState<{x: number, y: number}>({x: 0, y: 0});
+  const [startPosition, setStartPosition] = React.useState<{x: number, y: number} | null>(null);
   const robotRef = React.useRef<RobotHandler>(null);
+
+  const [startAutoRun] =  useRobotRunner();
 
   const updateMap = React.useCallback(() => {
     const info = random_matrix(10, 10, 10);
     setMatrix(info.matrix);
     setStartPosition(info.startPosition);
   }, []);
+  const clearPath = React.useCallback(() => {
+    let handle = robotRef.current;
+    if(!handle) return;
+    handle.clearPath();
+  }, []);
+
+  const startRun = React.useCallback(() => {
+    startAutoRun({
+      robot: robotRef,
+      matrix: matrix,
+    })
+  }, [startAutoRun,matrix])
 
   React.useEffect(() => {
     updateMap();
@@ -120,7 +154,14 @@ const AppView: React.FC<{}> = () => {
         <Map size={playgroundSize} matrix={matrix} />
         <Robot size={playgroundSize} matrix={matrix} startPosition={startPosition} ref={robotRef}/>
       </div>
-      <button onClick={updateMap}>Update Map</button>
+      <div>
+        <button onClick={updateMap}>Update Map</button>
+        <button onClick={clearPath}>Clear Path</button>
+        <button onClick={startRun}>Run</button>
+      </div>
+      <div>
+        键盘上下左右移动；键盘 A左转 D右转 W前进；Backspace键清除路径
+      </div>
     </div>
   );
 }

@@ -21,7 +21,8 @@ const drawGrid = (canvas: HTMLCanvasElement, rows: number, cols: number, color?:
 
   const row_height = height / rows;
   const col_width = width / cols;
-  ctx.strokeStyle = color || '#000000';
+  ctx.strokeStyle = color || '#999999';
+  ctx.lineWidth = 2;
 
   for (let i = 1; i < rows; i++) {
     ctx.beginPath();

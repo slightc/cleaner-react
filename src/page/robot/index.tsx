@@ -7,8 +7,9 @@ type Position = { x: number; y: number };
 
 type RobotProps = React.PropsWithChildren<{
   size: Size,
-  startPosition: Position,
+  startPosition: Position | null,
   matrix: MapMatrix,
+  onPositionChanged?: (position: Position) => void,
 }>;
 
 export interface RobotHandler {
@@ -20,10 +21,18 @@ export interface RobotHandler {
   turnLeft: () => boolean;
   turnRight: () => boolean;
   clearPath: () => void;
+  getPosition: () => Position;
+  getDirection: () => number;
 }
 
 type RobotHandlerRef = React.ForwardedRef<RobotHandler>;
 
+export const RobotDirection = {
+  UP: 270,
+  DOWN: 90,
+  LEFT: 180,
+  RIGHT: 0,
+}
 
 const initCanvas = (canvas: HTMLCanvasElement, backgroundStyle?: string) => {
   const ctx = canvas.getContext("2d");
@@ -36,9 +45,9 @@ const initCanvas = (canvas: HTMLCanvasElement, backgroundStyle?: string) => {
 }
 
 const clacTopLeft = (position: Position | null, size: Size) => {
-  const topLeft = {top: 0, left: 0};
-  
-  if(position){
+  const topLeft = { top: 0, left: 0 };
+
+  if (position) {
     topLeft.top = position.y * size.height;
     topLeft.left = position.x * size.width;
   }
@@ -64,12 +73,11 @@ const drawPath = (canvas: HTMLCanvasElement, start: Position, end: Position, siz
   ctx.moveTo(startPos.x, startPos.y);
   ctx.lineTo(endPos.x, endPos.y);
   ctx.stroke();
-  console.log('drawPath');
 }
 
-const Robot = ({ matrix, size, startPosition }: RobotProps, ref: RobotHandlerRef) => {
-  const [cellSize, setCellSize] = React.useState<Size>({width: 0, height: 0});
-  const [nowPosition, setNowPosition] = React.useState<Position>({x: 0, y: 0});
+const Robot = ({ matrix, size, startPosition, onPositionChanged }: RobotProps, ref: RobotHandlerRef) => {
+  const [cellSize, setCellSize] = React.useState<Size>({ width: 0, height: 0 });
+  const [nowPosition, setNowPosition] = React.useState<Position>({ x: 0, y: 0 });
   const [robotZ, setRobotZ] = React.useState(0);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -133,37 +141,45 @@ const Robot = ({ matrix, size, startPosition }: RobotProps, ref: RobotHandlerRef
   }, [nowPosition, toPosition]);
 
   const forward = React.useCallback(() => {
-    let z = (360 + robotZ)%360;
+    let z = (360 + robotZ) % 360;
     let pos = {
       x: nowPosition.x,
       y: nowPosition.y,
     }
     switch (z) {
-      case 0: pos.x = nowPosition.x + 1; break;
-      case 90: pos.y = nowPosition.y + 1; break;
-      case 180: pos.x = nowPosition.x - 1; break;
-      case 270: pos.y = nowPosition.y - 1; break;
+      case RobotDirection.RIGHT: pos.x = nowPosition.x + 1; break;
+      case RobotDirection.DOWN: pos.y = nowPosition.y + 1; break;
+      case RobotDirection.LEFT: pos.x = nowPosition.x - 1; break;
+      case RobotDirection.UP: pos.y = nowPosition.y - 1; break;
       default: break;
     }
     return toPosition(pos);
   }, [nowPosition, toPosition, robotZ]);
 
   const turnLeft = React.useCallback(() => {
-    let z = (robotZ - 90)%360;
+    let z = (robotZ - 90) % 360;
     setRobotZ(z);
     return true;
   }, [robotZ]);
   const turnRight = React.useCallback(() => {
-    let z = (robotZ + 90)%360;
+    let z = (robotZ + 90) % 360;
     setRobotZ(z);
     return true;
   }, [robotZ]);
 
   const clearPath = React.useCallback(() => {
-    if(canvasRef.current){
+    if (canvasRef.current) {
       initCanvas(canvasRef.current);
     }
-  },[]);
+  }, []);
+
+  const getPosition = React.useCallback(() => {
+    return nowPosition;
+  }, [nowPosition])
+  const getDirection = React.useCallback(() => {
+    const z = (robotZ + 360) % 360;
+    return z;
+  }, [robotZ])
 
   React.useEffect(() => {
     if (matrix && matrix.length > 0 && size) {
@@ -179,31 +195,37 @@ const Robot = ({ matrix, size, startPosition }: RobotProps, ref: RobotHandlerRef
   React.useEffect(() => {
     clearPath();
   }, [matrix, clearPath])
-  
+
   React.useEffect(() => {
     setRobotZ(Math.floor(Math.random() * (4)) * 90);
   }, [matrix])
 
   React.useEffect(() => {
-    if(startPosition){
+    if (startPosition) {
       setNowPosition(startPosition);
     }
   }, [startPosition])
 
+  React.useEffect(() => {
+    if(nowPosition && onPositionChanged){
+      onPositionChanged(nowPosition);
+    }
+  }, [nowPosition, onPositionChanged])
+
 
   React.useImperativeHandle(ref, () => {
     return {
-      toUp, toDown, toLeft, toRight, forward, turnLeft, turnRight, clearPath,
+      toUp, toDown, toLeft, toRight, forward, turnLeft, turnRight, clearPath, getPosition, getDirection
     }
-  }, [toUp, toDown, toLeft, toRight, forward, turnLeft, turnRight, clearPath]);
+  }, [toUp, toDown, toLeft, toRight, forward, turnLeft, turnRight, clearPath, getPosition, getDirection]);
 
 
   return (
     <div className={styles.robotWrapper}>
       <div className={styles.robotRelative}>
         <canvas ref={canvasRef} width={size.width} height={size.height} className={styles.robotCanvas} />
-        <div className={styles.robot} style={{...cellSize, ...clacTopLeft(nowPosition, cellSize)}}>
-          <div className={styles.robotIcon} style={{transform:`rotate(${robotZ}deg)`}}/>
+        <div className={styles.robot} style={{ ...cellSize, ...clacTopLeft(nowPosition, cellSize) }}>
+          <div className={styles.robotIcon} style={{ transform: `rotate(${robotZ}deg)` }} />
         </div>
       </div>
     </div>
