@@ -1,10 +1,7 @@
 import React from 'react';
 import styles from './robot.module.scss';
-import { MapMatrix } from '../../lib/common-type';
+import { MapMatrix, Size, Position } from '../../lib/common-type';
 import robotIcon from '../../assets/arrow.svg';
-
-type Size = { width: number; height: number };
-type Position = { x: number; y: number };
 
 type RobotProps = React.PropsWithChildren<{
   size: Size,

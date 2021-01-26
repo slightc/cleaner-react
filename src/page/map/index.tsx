@@ -2,6 +2,11 @@ import React from 'react';
 import styles from './map.module.scss';
 import { MapMatrix } from '../../lib/common-type';
 
+type MapProps = React.PropsWithChildren<{
+  size: { width: number; height: number },
+  matrix: MapMatrix,
+}>;
+
 const initCanvas = (canvas: HTMLCanvasElement, backgroundStyle?: string) => {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -75,11 +80,6 @@ const drawMatrix = (canvas: HTMLCanvasElement, matrix: MapMatrix) => {
     }
   }
 }
-
-type MapProps = React.PropsWithChildren<{
-  size: { width: number; height: number },
-  matrix: MapMatrix,
-}>;
 
 const Map: React.FC<MapProps> = ({ size, matrix }: MapProps) => {
   const [canvas, setCanvas] = React.useState<HTMLCanvasElement | null>(null);
