@@ -2,9 +2,9 @@ import React from 'react';
 // import logo from 'src/assets/logo.svg';
 import styles from './app.module.scss';
 
-import Map from 'src/page/map';
-import Robot, {RobotHandler} from 'src/page/robot';
-import { MapMatrix } from 'src/lib/common-type';
+import Map from '../../page/map';
+import Robot, {RobotHandler} from '../../page/robot';
+import { MapMatrix } from '../../lib/common-type';
 const playgroundSize = { width: 600, height: 600 };
 
 function random_int(b: number) {

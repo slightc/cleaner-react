@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './map.module.scss';
-import { MapMatrix } from 'src/lib/common-type';
+import { MapMatrix } from '../../lib/common-type';
 
 const initCanvas = (canvas: HTMLCanvasElement, backgroundStyle?: string) => {
   const ctx = canvas.getContext("2d");

@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './robot.module.scss';
-import { MapMatrix } from 'src/lib/common-type';
+import { MapMatrix } from '../../lib/common-type';
+import robotIcon from '../../assets/arrow.svg';
 
 type Size = { width: number; height: number };
 type Position = { x: number; y: number };
@@ -225,7 +226,7 @@ const Robot = ({ matrix, size, startPosition, onPositionChanged }: RobotProps, r
       <div className={styles.robotRelative}>
         <canvas ref={canvasRef} width={size.width} height={size.height} className={styles.robotCanvas} />
         <div className={styles.robot} style={{ ...cellSize, ...clacTopLeft(nowPosition, cellSize) }}>
-          <div className={styles.robotIcon} style={{ transform: `rotate(${robotZ}deg)` }} />
+          <img src={robotIcon} alt=">" className={styles.robotIcon} style={{ transform: `rotate(${robotZ}deg)` }} />
         </div>
       </div>
     </div>
