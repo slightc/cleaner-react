@@ -3,10 +3,11 @@ import React from 'react';
 import styles from './app.module.scss';
 
 import Map from '../../page/map';
-import Robot, { RobotHandler } from '../../page/robot';
+import Robot, { RobotHandler, RobotState } from '../../page/robot';
 import { MapMatrix } from '../../lib/common-type';
 import { random_matrix } from '../../lib/create-map';
 import useRobotRunner from '../../lib/robot-runner';
+import socket from '../../lib/socketio-interface';
 
 const playgroundSize = { width: 400, height: 400 };
 
@@ -38,12 +39,22 @@ const AppView: React.FC<{}> = () => {
     })
   }, [startAutoRun, matrix])
 
+
   React.useEffect(() => {
     startAutoRun(null);
   }, [matrix, startAutoRun]);
 
   React.useEffect(() => {
+    if(matrix){
+      socket.emit('map',matrix);
+    }
+  }, [matrix]);
+
+  React.useEffect(() => {
     updateMap();
+    socket.on('updateMap', () => {
+      updateMap();
+    });
   }, [updateMap]);
 
   const onKeyDown = React.useCallback((event: KeyboardEvent) => {
@@ -76,17 +87,38 @@ const AppView: React.FC<{}> = () => {
   }, []);
 
   React.useEffect(() => {
+    const doCb = (cb: any, value: any) => {
+      cb && cb(value);
+    }
+    socket.on('turnLeft',(cb: any) =>(doCb(cb,robotRef.current?.turnLeft())));
+    socket.on('turnRight',(cb: any) =>(doCb(cb,robotRef.current?.turnRight())));
+    socket.on('forward',(cb: any) =>(doCb(cb,robotRef.current?.forward())));
+
+    socket.on('toUp',(cb: any) =>(doCb(cb,robotRef.current?.toUp())));
+    socket.on('toDown',(cb: any) =>(doCb(cb,robotRef.current?.toDown())));
+    socket.on('toLeft',(cb: any) =>(doCb(cb,robotRef.current?.toLeft())));
+    socket.on('toRight',(cb: any) =>(doCb(cb,robotRef.current?.toRight())));
+    socket.on('connect', ()=>{
+      socket.emit('robotStart',true);
+    })
+  }, [])
+
+  React.useEffect(() => {
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
     }
   }, [onKeyDown]);
 
+  const onRobotStateChanged = React.useCallback((state: RobotState) => {
+    socket.emit('robotState',state);
+  },[])
+
   return (
     <div className={styles.app}>
       <div className={styles.playground} style={{ ...playgroundSize }}>
         <Map size={playgroundSize} matrix={matrix} />
-        <Robot size={playgroundSize} matrix={matrix} startPosition={startPosition} ref={robotRef} />
+        <Robot size={playgroundSize} matrix={matrix} onStateChanged={onRobotStateChanged} startPosition={startPosition} ref={robotRef} />
       </div>
       <div>
         <button onClick={updateMap}>Update Map</button>
