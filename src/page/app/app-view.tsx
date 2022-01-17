@@ -128,7 +128,7 @@ const AppView: React.FC<{}> = () => {
       <div>
         键盘上下左右移动；键盘 A左转 D右转 W前进；Backspace键清除路径
       </div>
-      <div>just for update 1</div>
+      <div>just for update 2</div>
     </div>
   );
 }
